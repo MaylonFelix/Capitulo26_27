@@ -19,23 +19,25 @@ import javax.swing.SwingUtilities;
 public class TicTacToeServer extends JFrame {
 
 	private String[] board = new String[9];
+	private JTextArea outputArea;
 	private Player[] players;
-	private ServerSocket server;
+	private ServerSocket server;// socket de servidor para conectar com clientes
 	private int currentPlayer;
-	private final static int PLAYER_0 = 0;
-	private final static int PLAYER_X = 1;
-	private final static String[] MARKS = { "0", "X" };
+	private final static int PLAYER_X = 0;
+	private final static int PLAYER_0 = 1;
+	private final static String[] MARKS = { "X", "0" };
 	private ExecutorService runGame;
 	private Lock gameLock;
 	private Condition otherPlayerConnected;
 	private Condition otherPlayerTurn;
-	private JTextArea outputArea;
 
 	// configura o servidor de tic-tac-toe e a GUI que exibe as mensagens
 	public TicTacToeServer() {
-		super("Tic-Tac-Toe Server");
+		super("Jogo da Velha Server");
+
 		runGame = Executors.newFixedThreadPool(2);
 		gameLock = new ReentrantLock();
+
 		otherPlayerConnected = gameLock.newCondition();
 		otherPlayerTurn = gameLock.newCondition();
 
@@ -43,7 +45,7 @@ public class TicTacToeServer extends JFrame {
 			board[i] = new String("");
 
 		players = new Player[2];
-		currentPlayer = PLAYER_0;
+		currentPlayer = PLAYER_X;
 
 		try {
 			server = new ServerSocket(12345, 2);
@@ -60,7 +62,7 @@ public class TicTacToeServer extends JFrame {
 		setVisible(true);
 	}
 
-	// espra duas conexões para que o jogo possa ser jogado
+	// espera duas conexões para que o jogo possa ser jogado
 	public void execute() {
 		for (int i = 0; i < players.length; i++) {
 			try {
@@ -72,8 +74,15 @@ public class TicTacToeServer extends JFrame {
 			}
 		}
 
-		gameLock.lock();
-		// TODO
+		gameLock.lock();// bloqueia o jogo para sinalizar a thread do jogador X
+
+		try {
+			players[PLAYER_X].setSuspended(false);// retoma o jogador X
+			otherPlayerConnected.signal();// acorda a thread do jogador X
+		} finally {
+			gameLock.unlock();// desbloqueia o jogo depois de sinalizar para o
+								// jogador X
+		}
 	}
 
 	private void displayMessage(final String messageToDisplay) {
@@ -88,29 +97,61 @@ public class TicTacToeServer extends JFrame {
 
 	}
 
+	// determina se a jogada é válida
 	public boolean validateAndMove(int location, int player) {
-		return true;
-		// TODO
+		while (player != currentPlayer) {
+			gameLock.lock();
+			try {
+				otherPlayerTurn.await();
+			} catch (InterruptedException exception) {
+				exception.printStackTrace();
+			} finally {
+				gameLock.unlock();
+			}
+		}
+
+		// se a posição não estiver ocupada faz a jogada
+		if (!isOccupied(location)) {
+			board[location] = MARKS[currentPlayer];// configura uma jogada no
+													// tabuleiro
+			currentPlayer = (currentPlayer + 1) % 2;// troca o jogador
+
+			// deixa que o novo jogador atual saiba que a jogada ocorreu
+			players[currentPlayer].otherPlayerMoved(location);
+
+			try {
+				otherPlayerTurn.signal();
+			} finally {
+				gameLock.unlock();
+			}
+			return true;
+		} else
+			// a jogada não foi válida
+			return false;
 	}
 
 	public boolean isOccupied(int location) {
-		return true;
-		// TODO
+
+		if (board[location].equals(MARKS[PLAYER_X])
+				|| board[location].equals(MARKS[PLAYER_0])) {
+			return true;
+		} else
+			return false;
 	}
 
 	private boolean isGameOver() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
+	// Classe interna privada Player, gerencia cada Player como um executável.
 	private class Player implements Runnable {
 
 		private Socket connection;
 		private Scanner input;
 		private Formatter output;
-		private int playerNumber;
-		private boolean suspended = true;
+		private int playerNumber;// monitora qual é o jogador
 		private String mark;
+		private boolean suspended = true;// se a thread está suspensa
 
 		public Player(Socket socket, int number) {
 			playerNumber = number;
@@ -132,22 +173,27 @@ public class TicTacToeServer extends JFrame {
 			output.flush();
 		}
 
+		// Execução da thread de controle
 		@Override
 		public void run() {
+			// Envia ao cliete a marca (X ou 0), processa as mensagens do
+			// cliente
 			try {
 				displayMessage("Player " + mark + " connected\n");
 				output.format("%s\n", mark);
 				output.flush();
 
+				// se for X espera que o outro jogador chegue
 				if (playerNumber == PLAYER_X) {
 					output.format("%s\n%s", "player X connected",
 							"Wainting for another player\n");
 					output.flush();
-					gameLock.lock();
+					gameLock.lock();// bloqueia o jogo para esperar o segundo
+									// jogador
 
 					try {
 						while (suspended) {
-							otherPlayerConnected.await();
+							otherPlayerConnected.await();// espera o jogador 0
 						}
 					} catch (InterruptedException exception) {
 						exception.printStackTrace();
