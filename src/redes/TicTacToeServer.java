@@ -119,6 +119,7 @@ public class TicTacToeServer extends JFrame {
 			// deixa que o novo jogador atual saiba que a jogada ocorreu
 			players[currentPlayer].otherPlayerMoved(location);
 
+			gameLock.lock();
 			try {
 				otherPlayerTurn.signal();
 			} finally {
@@ -176,7 +177,7 @@ public class TicTacToeServer extends JFrame {
 		// Execução da thread de controle
 		@Override
 		public void run() {
-			// Envia ao cliete a marca (X ou 0), processa as mensagens do
+			// Envia ao cliente a marca (X ou 0), processa as mensagens do
 			// cliente
 			try {
 				displayMessage("Player " + mark + " connected\n");
@@ -185,7 +186,7 @@ public class TicTacToeServer extends JFrame {
 
 				// se for X espera que o outro jogador chegue
 				if (playerNumber == PLAYER_X) {
-					output.format("%s\n%s", "player X connected",
+					output.format("%s\n%s", "Player X connected",
 							"Wainting for another player\n");
 					output.flush();
 					gameLock.lock();// bloqueia o jogo para esperar o segundo

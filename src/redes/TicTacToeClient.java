@@ -64,7 +64,7 @@ public class TicTacToeClient extends JFrame implements Runnable {
 		panel2.add(boardPanel, BorderLayout.CENTER);
 		add(panel2, BorderLayout.CENTER);
 
-		setSize(300, 750);
+		setSize(300, 225);
 		setVisible(true);
 		startClient();
 	}
@@ -82,51 +82,7 @@ public class TicTacToeClient extends JFrame implements Runnable {
 		worker.execute(this);
 	}
 
-	private class Square extends JPanel {
-
-		private String mark;
-		private int location;
-
-		public Square(String squareMark, int squareLocation) {
-			mark = squareMark;
-			location = squareLocation;
-			
-			addMouseListener(new MouseAdapter() {
-				public void mouseReleased(MouseEvent e){
-					setCurrentSquare(Square.this);
-					sendClickedSquare(getSquareLocation());
-				}
-
-				
-			});
-
-		}
-		
-		public Dimension getPreferredSize(){
-			return new Dimension(30,30);
-		}
-		
-		public Dimension getMinimumSize(){
-			return getPreferredSize();
-		}
-
-		public void setMark(String neMark) {
-			mark= neMark;
-			repaint();
-
-		}
-		
-		private int getSquareLocation() {
-			
-			return location;
-		}
-
-		public void paintComponent(Graphics g){
-			super.paintComponent(g);
-			g.drawRect(0, 0, 29, 29);
-			g.drawString(mark, 11, 20);
-		}
-	}
+	
 
 	@Override
 	public void run() {
@@ -149,12 +105,12 @@ public class TicTacToeClient extends JFrame implements Runnable {
 
 	private void processMessage(String message) {
 		if (message.equals("Valid move.")) {
-			displayMessage("Valid move, please wait.\n");
+			displayMessage("Valid move, please wait\n");
 			setMark(currentSquare, myMark);
-		} else if (message.equals("Invalid move. Please, try again.")) {
+		} else if (message.equals("Invalid move, try again")) {
 			displayMessage(message + "\n");
 			myTurn = true;
-		} else if (message.equals("Oppnet moved..")) {
+		} else if (message.equals("Opponet moved")) {
 			int location = input.nextInt();
 			input.nextLine();
 			int row = location / 3;
@@ -201,6 +157,52 @@ public class TicTacToeClient extends JFrame implements Runnable {
 
 	public void setCurrentSquare(Square square) {
 		currentSquare = square;
+	}
+	
+	private class Square extends JPanel {
+
+		private String mark;
+		private int location;
+
+		public Square(String squareMark, int squareLocation) {
+			mark = squareMark;
+			location = squareLocation;
+			
+			addMouseListener(new MouseAdapter() {
+				public void mouseReleased(MouseEvent e){
+					setCurrentSquare(Square.this);
+					sendClickedSquare(getSquareLocation());
+				}
+
+				
+			});
+
+		}
+		
+		public Dimension getPreferredSize(){
+			return new Dimension(30,30);
+		}
+		
+		public Dimension getMinimumSize(){
+			return getPreferredSize();
+		}
+
+		public void setMark(String neMark) {
+			mark= neMark;
+			repaint();
+
+		}
+		
+		private int getSquareLocation() {
+			
+			return location;
+		}
+
+		public void paintComponent(Graphics g){
+			super.paintComponent(g);
+			g.drawRect(0, 0, 29, 29);
+			g.drawString(mark, 11, 20);
+		}
 	}
 
 }
