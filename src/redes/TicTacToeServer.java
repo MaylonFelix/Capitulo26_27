@@ -24,8 +24,8 @@ public class TicTacToeServer extends JFrame {
 	private ServerSocket server;// socket de servidor para conectar com clientes
 	private int currentPlayer;
 	private final static int PLAYER_X = 0;
-	private final static int PLAYER_0 = 1;
-	private final static String[] MARKS = { "X", "0" };
+	private final static int PLAYER_O = 1;
+	private final static String[] MARKS = { "X", "O" };
 	private ExecutorService runGame;
 	private Lock gameLock;
 	private Condition otherPlayerConnected;
@@ -133,7 +133,7 @@ public class TicTacToeServer extends JFrame {
 	public boolean isOccupied(int location) {
 
 		if (board[location].equals(MARKS[PLAYER_X])
-				|| board[location].equals(MARKS[PLAYER_0])) {
+				|| board[location].equals(MARKS[PLAYER_O])) {
 			return true;
 		} else
 			return false;
@@ -203,7 +203,7 @@ public class TicTacToeServer extends JFrame {
 					output.format("Other player connected. Your move.\n");
 					output.flush();
 				} else {
-					output.format("Player 0 connected, please wait\n");
+					output.format("Player O connected, please wait\n");
 					output.flush();
 				}
 
