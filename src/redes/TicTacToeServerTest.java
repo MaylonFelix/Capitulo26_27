@@ -8,7 +8,6 @@ public class TicTacToeServerTest {
 		TicTacToeServer application = new TicTacToeServer();
 		application.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		application.execute();
-
 	}
 
 }

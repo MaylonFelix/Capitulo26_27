@@ -83,7 +83,7 @@ public class TicTacToeClient extends JFrame implements Runnable {
 	}
 
 	
-
+ 
 	@Override
 	public void run() {
 		myMark = input.nextLine();

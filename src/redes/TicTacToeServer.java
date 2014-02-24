@@ -31,6 +31,9 @@ public class TicTacToeServer extends JFrame {
 	private Condition otherPlayerConnected;
 	private Condition otherPlayerTurn;
 
+	private int[][] winConbinatons = { { 0, 1, 2 }, { 3, 4, 5 }, { 6, 7, 8 },
+			{ 0, 3, 6 }, { 1, 4, 7 }, { 2, 5, 8 }, { 0, 4, 8 }, { 2, 4, 6 } };
+
 	// configura o servidor de tic-tac-toe e a GUI que exibe as mensagens
 	public TicTacToeServer() {
 		super("Jogo da Velha Server");
@@ -119,11 +122,13 @@ public class TicTacToeServer extends JFrame {
 			// deixa que o novo jogador atual saiba que a jogada ocorreu
 			players[currentPlayer].otherPlayerMoved(location);
 
+			// bloquei o jogo para sinalizar ao outro jogador para proceguir
 			gameLock.lock();
 			try {
-				otherPlayerTurn.signal();
+				otherPlayerTurn.signal();// sinaliza que o outro jogador
+											// continue
 			} finally {
-				gameLock.unlock();
+				gameLock.unlock();// desbloqueia o jogo depois de sinalizar
 			}
 			return true;
 		} else
@@ -141,6 +146,35 @@ public class TicTacToeServer extends JFrame {
 	}
 
 	private boolean isGameOver() {
+		if (gotWinCombinations()) {
+			displayMessage("\nJogador " + MARKS[(currentPlayer + 1) % 2]
+					+ " venceu!");
+			return true;
+		} else if (!thereIsFreeSpace()) {
+			displayMessage("Deu velha!");
+			return true;
+		} else
+			return false;
+		// TODO
+	}
+
+	private boolean thereIsFreeSpace() {
+		for (int i = 0; i < 9; i++) {
+			if (board[i].isEmpty())
+				return true;
+		}
+		return false;
+	}
+
+	private boolean gotWinCombinations() {
+		for (int i = 0; i < winConbinatons.length; i++) {
+			if (board[winConbinatons[i][0]].equals(board[winConbinatons[i][1]])
+					&& board[winConbinatons[i][1]]
+							.equals(board[winConbinatons[i][2]])
+					&& !board[winConbinatons[i][0]].isEmpty()) {
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -209,6 +243,7 @@ public class TicTacToeServer extends JFrame {
 				}
 
 				while (!isGameOver()) {
+					// TODO
 					int location = 0;
 					if (input.hasNext())
 						location = input.nextInt();
@@ -223,7 +258,6 @@ public class TicTacToeServer extends JFrame {
 					}
 				}
 			} finally {
-
 				try {
 					connection.close();
 				} catch (IOException e) {
